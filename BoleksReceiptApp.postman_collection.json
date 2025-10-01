@@ -1,0 +1,197 @@
+{
+  "info": {
+    "name": "Boleks Receipt App",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "7f5d35ab-4f91-4d76-9a3b-rcpt-app"
+  },
+  "variable": [
+    { "key": "BASE", "value": "http://localhost:5000" },
+    { "key": "JWT", "value": "" },
+    { "key": "HMAC_SECRET", "value": "merchant_shared_secret" },
+    { "key": "RECEIPT_ID", "value": "" },
+    { "key": "TOKEN", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Signup",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": "{{BASE}}/auth/signup",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.token) { pm.collectionVariables.set('JWT', data.token); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": "{{BASE}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.token) { pm.collectionVariables.set('JWT', data.token); }"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Receipts",
+      "item": [
+        {
+          "name": "List Receipts",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{JWT}}" } ],
+            "url": "{{BASE}}/receipts"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.receipts && res.receipts.length) { pm.collectionVariables.set('RECEIPT_ID', res.receipts[0].id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Receipt by ID",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{JWT}}" } ],
+            "url": "{{BASE}}/receipts/{{RECEIPT_ID}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Public Token Link",
+      "item": [
+        {
+          "name": "Get Receipt via Token",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE}}/r/{{TOKEN}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "item": [
+        {
+          "name": "Push NFC (HMAC)",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE}}/webhook/nfc",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Signature", "value": "{{SIG}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receiptPayload\": {\n    \"merchant\": \"Demo Coffee\",\n    \"items\": [ { \"name\": \"Latte\", \"price\": 525 } ],\n    \"total\": 525,\n    \"timestamp\": \"2025-01-01T12:00:00Z\"\n  },\n  \"userId\": null,\n  \"merchantId\": 1\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const raw = pm.request.body.raw;",
+                  "const secret = pm.collectionVariables.get('HMAC_SECRET');",
+                  "const sig = CryptoJS.HmacSHA256(raw, secret).toString();",
+                  "pm.collectionVariables.set('SIG', sig);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.token) { pm.collectionVariables.set('TOKEN', data.token); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Push QR (HMAC)",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE}}/webhook/qr",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Signature", "value": "{{SIG}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receiptPayload\": {\n    \"merchant\": \"Demo Coffee\",\n    \"items\": [ { \"name\": \"Cappuccino\", \"price\": 475 } ],\n    \"total\": 475,\n    \"timestamp\": \"2025-01-01T12:05:00Z\"\n  },\n  \"userId\": null,\n  \"merchantId\": 1\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const raw = pm.request.body.raw;",
+                  "const secret = pm.collectionVariables.get('HMAC_SECRET');",
+                  "const sig = CryptoJS.HmacSHA256(raw, secret).toString();",
+                  "pm.collectionVariables.set('SIG', sig);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.token) { pm.collectionVariables.set('TOKEN', data.token); }"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

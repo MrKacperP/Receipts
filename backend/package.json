@@ -1,0 +1,22 @@
+{
+  "name": "boleks-receipt-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "nfc:write": "node tools/nfc-write.js"
+  },
+  "dependencies": {
+    "nfc-pcsc": "^0.8.1",
+    "node-fetch": "^3.3.2",
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^9.4.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "nanoid": "^5.0.7"
+  }
+}
