@@ -7,6 +7,7 @@ import receiptsRoutes from './routes/receipts.js';
 import receiptTokenRoutes from './routes/receiptToken.js';
 import webhookRoutes from './routes/webhooks.js';
 import devposRoutes from './routes/devpos.js';
+import productsRoutes from './routes/products.js';
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ app.use('/receipts', receiptsRoutes);
 app.use('/r', receiptTokenRoutes);
 app.use('/webhook', webhookRoutes);
 app.use('/devpos', devposRoutes);
+app.use('/products', productsRoutes);
 
 const PORT = process.env.PORT || 5000;
 const HOST = process.env.HOST || '0.0.0.0';

@@ -89,29 +89,38 @@ export default function POS(){
   function decQty(idx){ updateItem(idx,'qty',(items[idx].qty||1)-1) }
   function updateItemById(id, patch){ setItems(prev => prev.map(it => it.id === id ? { ...it, ...patch } : it)) }
 
-  function chooseBestProduct(prod){
-    if (!prod) return null
-    const candidates = Array.isArray(prod.candidates) ? prod.candidates : []
-    const priced = candidates.filter(c => (c.msrp_cents||0) > 0)
-    const best = (prod.msrp_cents||0) > 0 ? prod : (priced.length ? priced.sort((a,b)=> (b.msrp_cents||0) - (a.msrp_cents||0))[0] : (candidates[0] || null))
-    return best || null
-  }
   async function enrichCode(id, code){
     try {
       const r = await fetch(`${API}/products/${encodeURIComponent(code)}`)
-      if (!r.ok) throw new Error('lookup_failed')
-      const prod = await r.json()
-      const best = chooseBestProduct(prod)
+      if (!r.ok) {
+        if (r.status === 404) {
+          const data = await r.json()
+          updateItemById(id, { 
+            pending: false, 
+            notFound: true, 
+            name: data.code || code,
+            enrichFailed: true 
+          })
+          return
+        }
+        throw new Error('lookup_failed')
+      }
+      const product = await r.json()
       const patch = {
-        name: (best?.name || prod.name || code),
-        price: (best?.msrp_cents || prod.msrp_cents || 0),
-        image: best?.image_url || prod.image_url || null,
+        name: product.name || code,
+        price: product.msrp_cents || 0,
+        image: product.image_url || null,
+        sku: product.sku,
+        barcode: product.barcode,
+        category: product.category,
         pending: false,
-        notFound: !!prod.not_found
+        notFound: false,
+        enrichFailed: false
       }
       updateItemById(id, patch)
-    } catch {
-      updateItemById(id, { pending:false, enrichFailed:true, name: code })
+    } catch (err) {
+      console.error('Product lookup error:', err)
+      updateItemById(id, { pending: false, enrichFailed: true, name: code })
     }
   }
   function addScannedCode(raw){
@@ -263,9 +272,10 @@ export default function POS(){
                 <input className="item-price" style={{ width:80 }} placeholder="0.00" inputMode="decimal" value={(it.price/100).toFixed(2)} disabled={it.pending} onChange={e=>updateItem(idx,'price',e.target.value)} />
                 <div className="line-total">${(((it.price||0)*(it.qty||1))/100).toFixed(2)}</div>
                 {it.enrichFailed && (
-                  <button className="icon-btn" title="Retry lookup" onClick={()=>{ updateItemById(it.id,{ pending:true, enrichFailed:false }); enrichCode(it.id, it.code, 1) }}>↻</button>
+                  <button className="icon-btn" title="Retry lookup" onClick={()=>{ updateItemById(it.id,{ pending:true, enrichFailed:false }); enrichCode(it.id, it.code) }}>↻</button>
                 )}
-                {!it.enrichFailed && it.enrichSource && <div style={{ fontSize:10, color:'#475569', fontWeight:600 }}>{it.enrichSource}</div>}
+                {it.notFound && <div style={{ fontSize:10, color:'#ef4444', fontWeight:600 }}>NOT FOUND</div>}
+                {!it.enrichFailed && !it.notFound && it.sku && <div style={{ fontSize:10, color:'#10b981', fontWeight:600 }}>✓ {it.sku}</div>}
                 <button className="icon-btn" onClick={()=>removeItem(idx)}>✖️</button>
               </div>
             ))}

@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS receipt_tokens (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY(receipt_id) REFERENCES receipts(id)
 );
+
 `);
 
 export default db;
