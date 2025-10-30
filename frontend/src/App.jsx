@@ -1,21 +1,23 @@
 import React from 'react'
-import { Outlet, Link, useNavigate } from 'react-router-dom'
+import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom'
 
 export default function App() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const isPOS = location.pathname === '/' || location.pathname.startsWith('/pos')
   const logout = () => { localStorage.removeItem('jwt'); navigate('/login') }
   return (
-    <div className="container">
-      <header className="header">
+    <div className={"shell" + (isPOS ? ' pos-full' : '')}>
+      <aside className="sidebar">
         <div className="brand">Boleks Receipt</div>
-        <nav>
-          <Link to="/">Inbox</Link>
-          <Link to="/scan">Scan QR</Link>
-          <Link to="/pos">POS</Link>
+        <nav className="side-nav">
+          <Link className="side-link" to="/pos">POS</Link>
+          <Link className="side-link" to="/">Inbox</Link>
+          <Link className="side-link" to="/scan">Scan QR</Link>
           <button className="btn" onClick={logout}>Logout</button>
         </nav>
-      </header>
-      <main>
+      </aside>
+      <main className="content">
         <Outlet />
       </main>
     </div>
