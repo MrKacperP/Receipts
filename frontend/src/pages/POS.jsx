@@ -239,7 +239,15 @@ export default function POS(){
               <div className="muted" style={{ fontSize:12, letterSpacing:'.5px' }}>{returnMode ? 'RETURN MODE' : 'SALE MODE'}</div>
             </div>
             <div className="grow" />
-            <button className="customer-add-btn" onClick={()=>setShowCustomerModal(true)}><span style={{ fontSize:18 }}>➕</span> Customer</button>
+            {(customer.name || customer.phone || customer.email) ? (
+              <button className="customer-add-btn" onClick={()=>setShowCustomerModal(true)} style={{ background:'#10b981', color:'#fff' }}>
+                <span style={{ fontSize:18 }}>👤</span> {customer.name || customer.phone || customer.email}
+              </button>
+            ) : (
+              <button className="customer-add-btn" onClick={()=>setShowCustomerModal(true)}>
+                <span style={{ fontSize:18 }}>➕</span> Customer
+              </button>
+            )}
           </div>
           <div className="items">
             {items.map((it, idx) => (
@@ -388,6 +396,60 @@ export default function POS(){
                 <input inputMode="decimal" value={taxPercent} onChange={e=>setTaxPercent(Number(e.target.value)||0)} />
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showCustomerModal && (
+        <div className="receipt-modal" onClick={closeAllModals}>
+          <div className="receipt-content" onClick={e=>e.stopPropagation()}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
+              <h3>Customer Information</h3>
+              <button className="icon-btn" onClick={closeAllModals}>✖️</button>
+            </div>
+            <div style={{ display:'grid', gap:12 }}>
+              <div>
+                <label className="muted" style={{ display:'block', marginBottom:4, fontSize:12 }}>Name</label>
+                <input 
+                  placeholder="Customer name" 
+                  value={customer.name} 
+                  onChange={e=>setCustomer(prev=>({...prev, name:e.target.value}))} 
+                  style={{ width:'100%' }}
+                />
+              </div>
+              <div>
+                <label className="muted" style={{ display:'block', marginBottom:4, fontSize:12 }}>Phone</label>
+                <input 
+                  placeholder="Phone number" 
+                  value={customer.phone} 
+                  onChange={e=>setCustomer(prev=>({...prev, phone:e.target.value}))} 
+                  style={{ width:'100%' }}
+                  type="tel"
+                />
+              </div>
+              <div>
+                <label className="muted" style={{ display:'block', marginBottom:4, fontSize:12 }}>Email</label>
+                <input 
+                  placeholder="Email address" 
+                  value={customer.email} 
+                  onChange={e=>setCustomer(prev=>({...prev, email:e.target.value}))} 
+                  style={{ width:'100%' }}
+                  type="email"
+                />
+              </div>
+              <div style={{ display:'flex', gap:8, marginTop:8 }}>
+                <button className="btn" onClick={()=>{ setCustomer({ name:'', phone:'', email:'' }); closeAllModals() }}>Clear</button>
+                <button className="btn primary" onClick={closeAllModals}>Save</button>
+              </div>
+            </div>
+            {(customer.name || customer.phone || customer.email) && (
+              <div style={{ marginTop:16, padding:12, background:'#f1f5f9', borderRadius:8 }}>
+                <div className="muted" style={{ fontSize:11, marginBottom:6 }}>Current Customer:</div>
+                {customer.name && <div style={{ fontSize:13 }}><strong>{customer.name}</strong></div>}
+                {customer.phone && <div style={{ fontSize:13 }}>{customer.phone}</div>}
+                {customer.email && <div style={{ fontSize:13 }}>{customer.email}</div>}
+              </div>
+            )}
           </div>
         </div>
       )}
